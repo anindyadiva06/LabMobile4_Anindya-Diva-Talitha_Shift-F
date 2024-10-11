@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:tokokita/bloc/produk_bloc.dart';
 import 'package:tokokita/model/produk.dart';
+import 'package:tokokita/ui/produk_page.dart';
+import 'package:tokokita/widget/warning_dialog.dart';
 
 class ProdukForm extends StatefulWidget {
   Produk? produk;
-
   ProdukForm({Key? key, this.produk}) : super(key: key);
 
   @override
@@ -13,9 +15,8 @@ class ProdukForm extends StatefulWidget {
 class _ProdukFormState extends State<ProdukForm> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
-  String judul = "Tambah Produk Diva";
+  String judul = "TAMBAH PRODUK";
   String tombolSubmit = "SIMPAN";
-
   final _kodeProdukTextboxController = TextEditingController();
   final _namaProdukTextboxController = TextEditingController();
   final _hargaProdukTextboxController = TextEditingController();
@@ -29,14 +30,15 @@ class _ProdukFormState extends State<ProdukForm> {
   isUpdate() {
     if (widget.produk != null) {
       setState(() {
-        judul = "Ubah Produk Diva";
+        judul = "UBAH PRODUK";
         tombolSubmit = "UBAH";
         _kodeProdukTextboxController.text = widget.produk!.kodeProduk!;
         _namaProdukTextboxController.text = widget.produk!.namaProduk!;
-        _hargaProdukTextboxController.text = widget.produk!.hargaProduk.toString();
+        _hargaProdukTextboxController.text =
+            widget.produk!.hargaProduk.toString();
       });
     } else {
-      judul = "Tambah Produk Diva";
+      judul = "TAMBAH PRODUK";
       tombolSubmit = "SIMPAN";
     }
   }
@@ -47,24 +49,19 @@ class _ProdukFormState extends State<ProdukForm> {
       appBar: AppBar(
         title: Text(
           judul,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,  // Membuat teks tebal
-            color: Colors.white,           // Warna teks putih
-          ),
+          style: const TextStyle(color: Colors.white),
         ),
-        backgroundColor: Colors.deepPurple, // Warna AppBar
-        iconTheme: const IconThemeData(
-          color: Colors.white, // Warna panah back menjadi putih
-        ),
+        backgroundColor: Colors.deepPurple[800],
       ),
       body: Container(
-        // Agar background mencakup seluruh layar
-        height: MediaQuery.of(context).size.height, 
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
+            colors: [
+              Colors.deepPurple[800]!,
+              Colors.deepPurple[600]!,
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.deepPurple, Colors.purpleAccent], // Gradasi ungu tua
           ),
         ),
         child: SingleChildScrollView(
@@ -77,7 +74,7 @@ class _ProdukFormState extends State<ProdukForm> {
                   _kodeProdukTextField(),
                   _namaProdukTextField(),
                   _hargaProdukTextField(),
-                  _buttonSubmit()
+                  _buttonSubmit(),
                 ],
               ),
             ),
@@ -87,82 +84,119 @@ class _ProdukFormState extends State<ProdukForm> {
     );
   }
 
-  //Membuat Textbox Kode Produk
   Widget _kodeProdukTextField() {
     return TextFormField(
-      decoration: const InputDecoration(
-        labelText: "Kode Produk",
-        labelStyle: TextStyle(color: Colors.white), // Warna label teks putih
-      ),
+      decoration: const InputDecoration(labelText: "Kode Produk"),
       keyboardType: TextInputType.text,
       controller: _kodeProdukTextboxController,
-      style: const TextStyle(color: Colors.white), // Warna teks input putih
       validator: (value) {
         if (value!.isEmpty) {
           return "Kode Produk harus diisi";
         }
         return null;
       },
+      style: const TextStyle(color: Colors.white),
     );
   }
 
-  //Membuat Textbox Nama Produk
   Widget _namaProdukTextField() {
     return TextFormField(
-      decoration: const InputDecoration(
-        labelText: "Nama Produk",
-        labelStyle: TextStyle(color: Colors.white), // Warna label teks putih
-      ),
+      decoration: const InputDecoration(labelText: "Nama Produk"),
       keyboardType: TextInputType.text,
       controller: _namaProdukTextboxController,
-      style: const TextStyle(color: Colors.white), // Warna teks input putih
       validator: (value) {
         if (value!.isEmpty) {
           return "Nama Produk harus diisi";
         }
         return null;
       },
+      style: const TextStyle(color: Colors.white),
     );
   }
 
-  //Membuat Textbox Harga Produk
   Widget _hargaProdukTextField() {
     return TextFormField(
-      decoration: const InputDecoration(
-        labelText: "Harga",
-        labelStyle: TextStyle(color: Colors.white), // Warna label teks putih
-      ),
+      decoration: const InputDecoration(labelText: "Harga"),
       keyboardType: TextInputType.number,
       controller: _hargaProdukTextboxController,
-      style: const TextStyle(color: Colors.white), // Warna teks input putih
       validator: (value) {
         if (value!.isEmpty) {
           return "Harga harus diisi";
         }
         return null;
       },
+      style: const TextStyle(color: Colors.white),
     );
   }
 
-  //Membuat Tombol Simpan/Ubah
   Widget _buttonSubmit() {
     return OutlinedButton(
-      style: OutlinedButton.styleFrom(
-        backgroundColor: Colors.white, // Warna background tombol putih
-        side: const BorderSide(color: Colors.white), // Border putih
-      ),
       child: Text(
         tombolSubmit,
-        style: const TextStyle(
-          color: Colors.deepPurple, // Warna teks tombol ungu
-        ),
+        style: const TextStyle(color: Colors.white),
       ),
       onPressed: () {
         var validate = _formKey.currentState!.validate();
         if (validate) {
-          // Lakukan proses simpan atau ubah produk
+          if (!_isLoading) {
+            if (widget.produk != null) {
+              ubah();
+            } else {
+              simpan();
+            }
+          }
         }
       },
     );
+  }
+
+  simpan() {
+    setState(() {
+      _isLoading = true;
+    });
+    Produk createProduk = Produk(id: null);
+    createProduk.kodeProduk = _kodeProdukTextboxController.text;
+    createProduk.namaProduk = _namaProdukTextboxController.text;
+    createProduk.hargaProduk = int.parse(_hargaProdukTextboxController.text);
+    ProdukBloc.addProduk(produk: createProduk).then((value) {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (BuildContext context) => const ProdukPage(),
+      ));
+    }, onError: (error) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) => const WarningDialog(
+          description: "Simpan gagal, silahkan coba lagi",
+        ),
+      );
+    });
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  ubah() {
+    setState(() {
+      _isLoading = true;
+    });
+    Produk updateProduk = Produk(id: widget.produk!.id!);
+    updateProduk.kodeProduk = _kodeProdukTextboxController.text;
+    updateProduk.namaProduk = _namaProdukTextboxController.text;
+    updateProduk.hargaProduk = int.parse(_hargaProdukTextboxController.text);
+    ProdukBloc.updateProduk(produk: updateProduk).then((value) {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (BuildContext context) => const ProdukPage(),
+      ));
+    }, onError: (error) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) => const WarningDialog(
+          description: "Permintaan ubah data gagal, silahkan coba lagi",
+        ),
+      );
+    });
+    setState(() {
+      _isLoading = false;
+    });
   }
 }

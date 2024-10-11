@@ -2,7 +2,7 @@ class Login {
   int? code;
   bool? status;
   String? token;
-  int? userID;
+  String? userID; // Diubah menjadi String sesuai respons API
   String? userEmail;
 
   Login({this.code, this.status, this.token, this.userID, this.userEmail});
@@ -11,8 +11,8 @@ class Login {
     return Login(
       code: obj['code'],
       status: obj['status'],
-      token: obj['data']['token'],
-      userID: obj['data']['user']['id'],
+      token: obj['data']['token'], // Token sebagai String
+      userID: obj['data']['user']['id'], // ID pengguna sebagai String
       userEmail: obj['data']['user']['email'],
     );
   }

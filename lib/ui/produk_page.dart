@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:tokokita/bloc/logout_bloc.dart';
+import 'package:tokokita/bloc/produk_bloc.dart';
 import 'package:tokokita/model/produk.dart';
+import 'package:tokokita/ui/login_page.dart';
 import 'package:tokokita/ui/produk_detail.dart';
 import 'package:tokokita/ui/produk_form.dart';
 
@@ -16,77 +19,96 @@ class _ProdukPageState extends State<ProdukPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'List Produk Diva',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,  
-            color: Colors.white,           
-          ),
+          'List Produk',
+          style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: Colors.deepPurple, 
-        iconTheme: const IconThemeData(
-          color: Colors.white, 
-        ),
+        backgroundColor: Colors.deepPurple[800],
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 20.0),
             child: GestureDetector(
-              child: const Icon(Icons.add, size: 26.0, color: Colors.white), 
+              child: const Icon(
+                Icons.add,
+                size: 26.0,
+                color: Colors.white,
+              ),
               onTap: () async {
                 Navigator.push(
-                    context, MaterialPageRoute(builder: (context) => ProdukForm()));
+                  context,
+                  MaterialPageRoute(builder: (context) => ProdukForm()),
+                );
               },
             ),
           )
         ],
       ),
       drawer: Drawer(
-        child: ListView(
-          children: [
-            ListTile(
-              title: const Text('Logout'),
-              trailing: const Icon(Icons.logout),
-              onTap: () async {},
-            )
-          ],
-        ),
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.deepPurple, Colors.purpleAccent], 
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.deepPurple[800]!,
+                Colors.deepPurple[600]!,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: ListView(
+            children: [
+              ListTile(
+                title: const Text(
+                  'Logout',
+                  style: TextStyle(color: Colors.white),
+                ),
+                trailing: const Icon(
+                  Icons.logout,
+                  color: Colors.white,
+                ),
+                onTap: () async {
+                  await LogoutBloc.logout().then((value) {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => LoginPage()),
+                      (route) => false,
+                    );
+                  });
+                },
+              )
+            ],
           ),
         ),
-        child: ListView(
-          children: [
-            ItemProduk(
-              produk: Produk(
-                id: 1,
-                kodeProduk: 'A001',
-                namaProduk: 'Kamera',
-                hargaProduk: 5000000,
-              ),
-            ),
-            ItemProduk(
-              produk: Produk(
-                id: 2,
-                kodeProduk: 'A002',
-                namaProduk: 'Kulkas',
-                hargaProduk: 2500000,
-              ),
-            ),
-            ItemProduk(
-              produk: Produk(
-                id: 3,
-                kodeProduk: 'A003',
-                namaProduk: 'Mesin Cuci',
-                hargaProduk: 2000000,
-              ),
-            ),
-          ],
-        ),
       ),
+      body: FutureBuilder<List>(
+        future: ProdukBloc.getProduks(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) print(snapshot.error);
+          return snapshot.hasData
+              ? ListProduk(
+                  list: snapshot.data,
+                )
+              : const Center(
+                  child: CircularProgressIndicator(),
+                );
+        },
+      ),
+    );
+  }
+}
+
+class ListProduk extends StatelessWidget {
+  final List? list;
+
+  const ListProduk({Key? key, this.list}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: list == null ? 0 : list!.length,
+      itemBuilder: (context, i) {
+        return ItemProduk(
+          produk: list![i],
+        );
+      },
     );
   }
 }
@@ -110,14 +132,15 @@ class ItemProduk extends StatelessWidget {
         );
       },
       child: Card(
+        color: Colors.deepPurple[200],
         child: ListTile(
           title: Text(
             produk.namaProduk!,
-            style: const TextStyle(color: Colors.deepPurple), 
+            style: const TextStyle(color: Colors.white),
           ),
           subtitle: Text(
-            'Rp. ${produk.hargaProduk}',
-            style: const TextStyle(color: Colors.deepPurple), 
+            produk.hargaProduk.toString(),
+            style: const TextStyle(color: Colors.white),
           ),
         ),
       ),

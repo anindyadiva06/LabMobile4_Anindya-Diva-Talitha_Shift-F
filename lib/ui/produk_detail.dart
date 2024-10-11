@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:tokokita/bloc/produk_bloc.dart';
 import 'package:tokokita/model/produk.dart';
 import 'package:tokokita/ui/produk_form.dart';
+import 'package:tokokita/ui/produk_page.dart';
+import 'package:tokokita/widget/warning_dialog.dart';
 
 class ProdukDetail extends StatefulWidget {
   Produk? produk;
-
   ProdukDetail({Key? key, this.produk}) : super(key: key);
 
   @override
@@ -16,55 +18,38 @@ class _ProdukDetailState extends State<ProdukDetail> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Detail Produk Diva',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,  
-            color: Colors.white,           
-          ),
-        ),
-        backgroundColor: Colors.deepPurple, 
-        iconTheme: const IconThemeData(
-          color: Colors.white, 
-        ),
+        title:
+            const Text('Detail Produk', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.deepPurple[800],
       ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
+            colors: [
+              Colors.deepPurple[800]!,
+              Colors.deepPurple[600]!,
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.deepPurple, Colors.purpleAccent], 
           ),
         ),
         child: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center, 
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 "Kode : ${widget.produk!.kodeProduk}",
-                style: const TextStyle(
-                  fontSize: 20.0,
-                  color: Colors.white, 
-                ),
+                style: const TextStyle(fontSize: 20.0, color: Colors.white),
               ),
-              const SizedBox(height: 10), 
               Text(
                 "Nama : ${widget.produk!.namaProduk}",
-                style: const TextStyle(
-                  fontSize: 18.0,
-                  color: Colors.white, 
-                ),
+                style: const TextStyle(fontSize: 18.0, color: Colors.white),
               ),
-              const SizedBox(height: 10),
               Text(
                 "Harga : Rp. ${widget.produk!.hargaProduk.toString()}",
-                style: const TextStyle(
-                  fontSize: 18.0,
-                  color: Colors.white, 
-                ),
+                style: const TextStyle(fontSize: 18.0, color: Colors.white),
               ),
-              const SizedBox(height: 20),
-              _tombolHapusEdit()
+              _tombolHapusEdit(),
             ],
           ),
         ),
@@ -76,15 +61,8 @@ class _ProdukDetailState extends State<ProdukDetail> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Tombol Edit
         OutlinedButton(
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Colors.white), 
-          ),
-          child: const Text(
-            "EDIT",
-            style: TextStyle(color: Colors.white), 
-          ),
+          child: const Text("EDIT", style: TextStyle(color: Colors.white)),
           onPressed: () {
             Navigator.push(
               context,
@@ -96,16 +74,8 @@ class _ProdukDetailState extends State<ProdukDetail> {
             );
           },
         ),
-        const SizedBox(width: 10),
-        // Tombol Hapus
         OutlinedButton(
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Colors.white), 
-          ),
-          child: const Text(
-            "DELETE",
-            style: TextStyle(color: Colors.white), 
-          ),
+          child: const Text("DELETE", style: TextStyle(color: Colors.white)),
           onPressed: () => confirmHapus(),
         ),
       ],
@@ -114,21 +84,37 @@ class _ProdukDetailState extends State<ProdukDetail> {
 
   void confirmHapus() {
     AlertDialog alertDialog = AlertDialog(
-      content: const Text("Yakin ingin menghapus data ini?"),
+      content: const Text("Yakin ingin menghapus data ini?",
+          style: TextStyle(color: Color.fromARGB(255, 80, 18, 138))),
       actions: [
-        // Tombol hapus
         OutlinedButton(
-          child: const Text("Ya"),
-          onPressed: () {},
+          child: const Text("Ya",
+              style: TextStyle(color: Color.fromARGB(255, 80, 18, 138))),
+          onPressed: () {
+            ProdukBloc.deleteProduk(id: (widget.produk!.id!)).then(
+              (value) => {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const ProdukPage(),
+                )),
+              },
+              onError: (error) {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) => const WarningDialog(
+                    description: "Hapus gagal, silahkan coba lagi",
+                  ),
+                );
+              },
+            );
+          },
         ),
-        // Tombol batal
         OutlinedButton(
-          child: const Text("Batal"),
+          child: const Text("Batal",
+              style: TextStyle(color: Color.fromARGB(255, 80, 18, 138))),
           onPressed: () => Navigator.pop(context),
-        )
+        ),
       ],
     );
-
     showDialog(builder: (context) => alertDialog, context: context);
   }
 }
